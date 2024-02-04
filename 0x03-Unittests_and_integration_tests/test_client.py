@@ -16,14 +16,8 @@ class TestGithubOrgClient(unittest.TestCase):
         ("abc"),
     ])
     @patch("client.get_json")
-    def test_org(self, org_name: str, mock_get_json: MagicMock) -> None:
-        """
-        Test the org method of GithubOrgClient class.
-
-        Args:
-            org_name (str): Name of the organization.
-            mock_get_json (MagicMock): Mock object for get_json method.
-        """
+    def test_org(self, org_name, mock_get_json):
+        """Test the org method of GithubOrgClient class."""
         test_instance: GithubOrgClient = GithubOrgClient(org_name)
         # Assert that the get_json method was called with the expected URL
         mock_get_json.assert_called_once_with(
