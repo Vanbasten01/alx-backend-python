@@ -2,9 +2,10 @@
 """This script tests the org method of the GithubOrgClient class."""
 
 import unittest
-from parameterized import parameterized
-from unittest.mock import patch, PropertyMock
+from parameterized import parameterized, parameterized_class
+from unittest.mock import patch, PropertyMock, Mock
 from client import GithubOrgClient
+from fixtures import TEST_PAYLOAD
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -58,6 +59,30 @@ class TestGithubOrgClient(unittest.TestCase):
         client = GithubOrgClient("test_org")
         result = client.has_license(repo, license_key)
         self.assertEqual(result, expected)
+
+@parameterized_class(('org_payload', 'repos_payload', 'expected_repos',
+                     'apache2_repos'), TEST_PAYLOAD)
+class TestIntegrationGithubOrgClient(unittest.TestCase):
+    """Integration test cases for the GithubOrgClient class."""
+    @classmethod
+    def setUpClass(cls):
+        """Set up the class for integration testing."""
+        def side_effects(url):
+            """Side effect function for requests.get mock."""
+            mock_response = Mock()
+            for payload in TEST_PAYLOAD:
+                if url == payload[0]["repos_url"]:
+                    repo = payload[1]
+                    break
+            mock_response.json.return_value = repo
+            return mock_response
+        cls.get_patcher = patch("requests.get", side_effect=side_effects)
+        cls.get_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Tear down the class after integration testing."""
+        cls.get_patcher.stop()
 
 
 if __name__ == "__main__":
