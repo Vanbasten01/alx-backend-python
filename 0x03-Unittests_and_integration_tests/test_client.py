@@ -70,6 +70,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         def side_effects(url):
             """Side effect function for requests.get mock."""
             mock_response = Mock()
+            repo = ""
             for payload in TEST_PAYLOAD:
                 if url == payload[0]["repos_url"]:
                     repo = payload[1]
@@ -77,12 +78,29 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             mock_response.json.return_value = repo
             return mock_response
         cls.get_patcher = patch("requests.get", side_effect=side_effects)
+        cls.org_patcher = patch("client.GithubOrgClient.org",
+                                new_callable=PropertyMock,
+                                return_value=cls.org_payload)
         cls.get_patcher.start()
+        cls.org_patcher.start()
+
+    def test_public_repos(self):
+        """Test public_repos method without specifying a license."""
+        client = GithubOrgClient("google")
+        actual_repos = client.public_repos()
+        self.assertEqual(actual_repos, self.expected_repos)
+
+    def test_public_repos_with_license(self):
+        """Test public_repos method with a specified license."""
+        client = GithubOrgClient("google")
+        actual_repos = client.public_repos("apache-2.0")
+        self.assertEqual(actual_repos, self.apache2_repos)
 
     @classmethod
     def tearDownClass(cls):
         """Tear down the class after integration testing."""
         cls.get_patcher.stop()
+        cls.org_patcher.stop()
 
 
 if __name__ == "__main__":
